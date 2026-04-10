@@ -19,6 +19,14 @@ RUN npm ci --only=production --legacy-peer-deps
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Install OpenSSL 1.1 for Prisma compatibility
+RUN apt-get update && apt-get install -y wget && \
+    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
