@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Certificate } from "@prisma/client";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
