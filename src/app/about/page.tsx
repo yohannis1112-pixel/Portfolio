@@ -3,9 +3,8 @@ import { getActiveCV } from "@/actions/cv";
 import { getAboutContent } from "@/actions/about";
 import { CVDownloadButton } from "@/components/shared/CVDownloadButton";
 import Image from "next/image";
- 
-// Remove force-dynamic to enable caching
-export const revalidate = 300; // Revalidate every 5 minutes
+
+export const dynamic = 'force-dynamic';
  
 export default async function AboutPage() {
   const activeCV = await getActiveCV();

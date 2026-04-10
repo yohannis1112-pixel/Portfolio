@@ -1,6 +1,8 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { CertificateGrid } from "@/components/certificates/CertificateGrid";
 import { getCertificates } from "@/actions/certificate";
+
+export const dynamic = 'force-dynamic';
  
 export default async function CertificatesPage() {
   const certificates = await getCertificates();

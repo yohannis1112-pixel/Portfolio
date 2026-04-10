@@ -2,6 +2,8 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { PortfolioGrid } from "@/components/portfolio/PortfolioGrid";
 import { getPortfolioItems } from "@/actions/portfolio";
 import { getPortfolioHero } from "@/actions/portfolio-hero";
+
+export const dynamic = 'force-dynamic';
  
 export default async function Home() {
   try {
