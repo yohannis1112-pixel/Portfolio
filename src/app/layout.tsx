@@ -8,8 +8,15 @@ import "@/lib/suppress-warnings-improved";
 const inter = Inter({ subsets: ["latin"] });
  
 export const metadata: Metadata = {
-  title: "Professional Creative Portfolio",
-  description: "Photographer, Editor, Photoshop, DaVinci, Blender artist portfolio",
+  title: "Yohannis Asefa | Creative Portfolio",
+  description: "Professional portfolio of Yohannis Asefa - Photographer, Video Editor, DaVinci Resolve, Blender & Photoshop artist.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
  
 export default function RootLayout({
