@@ -70,12 +70,16 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     try {
       const resourceType = file.type.startsWith("video/") ? "video" : "image";
       const result = await uploadToCloudinary(file, resourceType);
-      setValue("mediaUrl", result.url);
-      setValue("mediaType", result.resourceType === "video" ? "video" : "image");
-      setUploadedFile({ url: result.url, type: result.resourceType });
+      if (result && result.url) {
+        setValue("mediaUrl", result.url);
+        setValue("mediaType", result.resourceType === "video" ? "video" : "image");
+        setUploadedFile({ url: result.url, type: result.resourceType });
+      } else {
+        throw new Error("Upload returned no URL");
+      }
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Upload failed");
+      alert("Upload failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setUploading(false);
     }

@@ -53,10 +53,15 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
     setUploading(true);
     try {
       const result = await uploadToCloudinary(file, "image");
-      setValue("imageUrl", result.url);
+      if (result && result.url) {
+        setValue("imageUrl", result.url);
+        alert("Image uploaded successfully!");
+      } else {
+        throw new Error("Upload returned no URL");
+      }
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Upload failed");
+      alert("Upload failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setUploading(false);
     }
