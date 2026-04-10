@@ -11,6 +11,13 @@ export async function uploadToCloudinaryServer(formData: FormData) {
     throw new Error("No file provided");
   }
 
+  // Debug: Log environment variables (remove in production)
+  console.log("Cloudinary config check:", {
+    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? "SET" : "NOT SET",
+    api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "NOT SET",
+    api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "NOT SET",
+  });
+
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
