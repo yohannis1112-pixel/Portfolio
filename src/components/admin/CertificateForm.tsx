@@ -29,11 +29,13 @@ interface CertificateFormProps {
 export function CertificateForm({ initialData, onSuccess }: CertificateFormProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
  
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -45,6 +47,8 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
       credentialUrl: initialData.credentialUrl || "",
     } : {},
   });
+
+  const currentImageUrl = watch("imageUrl");
  
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -55,6 +59,7 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
       const result = await uploadToCloudinary(file, "image");
       if (result && result.url) {
         setValue("imageUrl", result.url);
+        setUploadedImage(result.url);
         alert("Image uploaded successfully!");
       } else {
         throw new Error("Upload returned no URL");
@@ -109,11 +114,27 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
       </div>
  
       <div>
-        <label className="block text-sm font-medium">Image Upload (Preview)</label>
-        <Input type="file" onChange={handleFileUpload} disabled={uploading} />
+        <label className="block text-sm font-medium">Image Upload</label>
+        <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
         {uploading && <div className="mt-2 flex items-center text-sm"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</div>}
+        
+        {/* Show newly uploaded image */}
+        {uploadedImage && (
+          <div className="mt-3">
+            <p className="text-sm text-green-600">✓ New image uploaded</p>
+            <img src={uploadedImage} alt="New upload" className="mt-2 h-32 rounded-lg object-cover border" />
+          </div>
+        )}
+        
+        {/* Show current image when editing (only if no new upload) */}
+        {!uploadedImage && currentImageUrl && (
+          <div className="mt-3">
+            <p className="text-sm text-muted-foreground">Current image:</p>
+            <img src={currentImageUrl} alt="Current" className="mt-2 h-32 rounded-lg object-cover border" />
+          </div>
+        )}
       </div>
- 
+
       <div>
         <label className="block text-sm font-medium">Image URL</label>
         <Input {...register("imageUrl")} placeholder="https://..." />
