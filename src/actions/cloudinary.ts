@@ -29,21 +29,24 @@ export async function uploadToCloudinaryServer(formData: FormData) {
   }
 
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
+    const uploadStream = cloudinary.uploader.upload_stream(
       uploadOptions,
       (error, result) => {
         if (error) {
           console.error("Cloudinary Upload Error:", error);
           reject(new Error(`Cloudinary upload failed: ${error.message}`));
+        } else if (!result) {
+          reject(new Error("Cloudinary upload returned no result"));
         } else {
           resolve({
-            url: result?.secure_url,
-            publicId: result?.public_id,
-            resourceType: result?.resource_type,
-            assetId: result?.asset_id,
+            url: result.secure_url,
+            publicId: result.public_id,
+            resourceType: result.resource_type,
+            assetId: result.asset_id,
           });
         }
       }
-    ).end(buffer);
+    );
+    uploadStream.end(buffer);
   });
 }
