@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  category    String
+  mediaUrl    String
+  mediaType   String
+  thumbnailUrl String?
+  featured    Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Certificate {
+  id            String   @id @default(cuid())
+  title         String
+  issuer        String
+  issueDate     DateTime
+  credentialUrl String?
+  imageUrl      String
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model CV {
+  id         String   @id @default(cuid())
+  title      String
+  fileUrl    String
+  fileName   String
+  fileSize   Int
+  mimeType   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  uploadedAt DateTime @default(now())
+  isActive   Boolean  @default(false)
+}
+
+model Stats {
+  id        String   @id @default(cuid())
+  views     Int      @default(0)
+  downloads Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model About {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  expertise   String[]
+  imageUrl    String?
+  updatedAt   DateTime @updatedAt
+}

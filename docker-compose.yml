@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Main application
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - portfolio-network
+
+  # PostgreSQL Database (optional - use if not using external DB)
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=portfolio
+      - POSTGRES_USER=portfolio_user
+      - POSTGRES_PASSWORD=portfolio_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - portfolio-network
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - portfolio-network
+
+volumes:
+  postgres_data:
+
+networks:
+  portfolio-network:
+    driver: bridge
