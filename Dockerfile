@@ -4,6 +4,12 @@ FROM node:18-slim AS base
 # Install dependencies only when needed
 FROM base AS deps
 RUN apt-get update && apt-get install -y libc6 openssl
+# Install OpenSSL 1.1 for Prisma compatibility
+RUN apt-get install -y wget && \
+    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
@@ -36,8 +42,13 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL 1.1 for Prisma
+RUN apt-get update && \
+    apt-get install -y wget && \
+    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy the public folder
 COPY --from=builder /app/public ./public
