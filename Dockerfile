@@ -17,6 +17,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Install dev dependencies for building
+RUN npm ci --legacy-peer-deps
+
 # Generate Prisma Client
 RUN npx prisma generate
 
