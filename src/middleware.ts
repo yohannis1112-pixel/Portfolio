@@ -3,16 +3,24 @@ import { NextResponse } from "next/server";
  
 export default withAuth(
   function middleware(req) {
-    // Allow access to login page
-    if (req.nextUrl.pathname === "/admin/login") {
+    const { pathname } = req.nextUrl;
+
+    // Allow login page always
+    if (pathname === "/admin/login") {
       return NextResponse.next();
     }
-    
-    // Redirect to login if not authenticated
+
+    // Allow Next.js server actions (they POST to the page URL)
+    const isServerAction = req.headers.get("next-action") !== null;
+    if (isServerAction) {
+      return NextResponse.next();
+    }
+
+    // Redirect unauthenticated users to login
     if (!req.nextauth.token) {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
-    
+
     return NextResponse.next();
   },
   {

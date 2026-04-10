@@ -11,28 +11,25 @@ export async function uploadToCloudinaryServer(formData: FormData) {
     throw new Error("No file provided");
   }
 
-  // Debug: Log environment variables (remove in production)
-  console.log("Cloudinary config check:", {
-    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? "SET" : "NOT SET",
-    api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "NOT SET",
-    api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "NOT SET",
-  });
+  // Verify Cloudinary is configured
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error("Cloudinary environment variables are not configured");
+  }
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
 
-  // Sanitize public_id if provided, otherwise Cloudinary generates a random one
-  const uploadOptions: any = { 
+  const uploadOptions: any = {
     resource_type: resourceType,
+    access_mode: 'public',
   };
 
   if (customPublicId) {
-    // Simplify: Just set the public_id. Cloudinary raw handles extensions automatically
-    // if they are part of the public_id.
-    const safePublicId = customPublicId.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
-    uploadOptions.public_id = safePublicId;
-    // Explicitly set access_mode to public to prevent 401 errors
-    uploadOptions.access_mode = 'public';
+    uploadOptions.public_id = customPublicId.replace(/[^a-z0-9.]/gi, '_').toLowerCase();
   }
 
   return new Promise((resolve, reject) => {
