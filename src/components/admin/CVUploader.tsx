@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { uploadToCloudinary } from "@/lib/cloudinary-client";
+import { uploadDirectToCloudinary } from "@/lib/cloudinary-direct";
 import { uploadCV } from "@/actions/cv";
 import { Loader2, Upload } from "lucide-react";
  
@@ -15,12 +15,12 @@ export function CVUploader({ onSuccess }: CVUploaderProps) {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
-      // Set default title if empty
       if (!title) {
         setTitle(selectedFile.name.replace(/\.[^/.]+$/, ""));
       }
@@ -31,30 +31,30 @@ export function CVUploader({ onSuccess }: CVUploaderProps) {
     if (!file || !title) return;
   
     setLoading(true);
+    setUploadProgress(0);
     try {
-      // Get the original extension from the actual file name
-      const extension = file.name.includes('.') ? file.name.split('.').pop() : 'pdf';
-      // Use the title + original extension as the publicId to preserve the format
-      const customPublicId = `${title}.${extension}`;
-      
-      const result = await uploadToCloudinary(file, "raw", customPublicId);
+      const result = await uploadDirectToCloudinary(file, "raw", (progress) => {
+        setUploadProgress(progress.percent);
+      });
+
       await uploadCV({
-        title: title,
+        title,
         fileName: file.name,
         fileUrl: result.url,
-        fileSize: Math.round(file.size / 1024), // KB
+        fileSize: Math.round(file.size / 1024),
         mimeType: file.type || "application/octet-stream",
         isActive: true,
       });
+
       setFile(null);
       setTitle("");
+      setUploadProgress(0);
       onSuccess();
-      alert("File uploaded successfully!");
     } catch (error) {
-      console.error("Upload failed", error);
-      alert("Upload failed");
+      alert("Upload failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
  
@@ -66,10 +66,10 @@ export function CVUploader({ onSuccess }: CVUploaderProps) {
       <div className="space-y-3">
         <div>
           <label className="text-xs font-medium mb-1 block">Document Title</label>
-          <Input 
-            placeholder="e.g. English CV 2024" 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
+          <Input
+            placeholder="e.g. English CV 2024"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -78,9 +78,23 @@ export function CVUploader({ onSuccess }: CVUploaderProps) {
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
           </Button>
         </div>
+        {loading && (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Uploading directly to Cloudinary...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
       <p className="text-xs text-muted-foreground">
-        Supports PDF and Microsoft Word formats. New uploads automatically become active.
+        Supports PDF and Microsoft Word formats. Uploads directly to Cloudinary - no file size limit issues.
       </p>
     </div>
   );

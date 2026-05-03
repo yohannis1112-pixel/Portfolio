@@ -7,7 +7,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { uploadToCloudinary } from "@/lib/cloudinary-client";
+import { uploadDirectToCloudinary } from "@/lib/cloudinary-direct";
 import { createPortfolioItem, updatePortfolioItem } from "@/actions/portfolio";
 import { Loader2 } from "lucide-react";
 import { PortfolioItem } from "@prisma/client";
@@ -33,8 +33,8 @@ interface PortfolioFormProps {
 export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<{ url: string; type: string } | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   const {
     register,
@@ -67,21 +67,20 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     if (!file) return;
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       const resourceType = file.type.startsWith("video/") ? "video" : "image";
-      const result = await uploadToCloudinary(file, resourceType);
-      if (result && result.url) {
-        setValue("mediaUrl", result.url);
-        setValue("mediaType", result.resourceType === "video" ? "video" : "image");
-        setUploadedFile({ url: result.url, type: result.resourceType });
-      } else {
-        throw new Error("Upload returned no URL");
-      }
+      const result = await uploadDirectToCloudinary(file, resourceType, (progress) => {
+        setUploadProgress(progress.percent);
+      });
+      setValue("mediaUrl", result.url);
+      setValue("mediaType", result.resourceType === "video" ? "video" : "image");
+      setUploadedFile({ url: result.url, type: result.resourceType });
     } catch (error) {
-      console.error("Upload failed", error);
       alert("Upload failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -90,15 +89,17 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     if (!file) return;
 
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const result = await uploadToCloudinary(file, "image");
+      const result = await uploadDirectToCloudinary(file, "image", (progress) => {
+        setUploadProgress(progress.percent);
+      });
       setValue("thumbnailUrl", result.url);
-      setThumbnailFile(null);
     } catch (error) {
-      console.error("Thumbnail upload failed", error);
-      alert("Thumbnail upload failed");
+      alert("Thumbnail upload failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
  
@@ -112,8 +113,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
       }
       onSuccess();
     } catch (error) {
-      console.error("Save failed", error);
-      alert("Save failed");
+      alert("Save failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -164,23 +164,29 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
           disabled={uploading} 
         />
         {uploading && (
-          <div className="mt-2 flex items-center text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading to Cloudinary...
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Uploading directly to Cloudinary...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
           </div>
         )}
         {uploadedFile && (
           <div className="mt-3">
-            <p className="text-sm text-green-600 flex items-center gap-2">
-              ✓ File uploaded successfully
-            </p>
+            <p className="text-sm text-green-600">✓ File uploaded successfully</p>
             {uploadedFile.type === "image" ? (
               <img src={uploadedFile.url} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border" />
             ) : (
-              <video src={uploadedFile.url} controls className="mt-2 h-32 rounded-lg object-cover border" />
+              <video src={uploadedFile.url} controls className="mt-2 h-32 rounded-lg border" />
             )}
           </div>
         )}
-        {errors.mediaUrl && <p className="text-sm text-red-500 mt-1">{errors.mediaUrl?.message}</p>}
       </div>
       
       {mediaType === "video" && (
@@ -192,11 +198,6 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
             onChange={handleThumbnailUpload} 
             disabled={uploading} 
           />
-          {uploading && (
-            <div className="mt-2 flex items-center text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading thumbnail...
-            </div>
-          )}
         </div>
       )}
   

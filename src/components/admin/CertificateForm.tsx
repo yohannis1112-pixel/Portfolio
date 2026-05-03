@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { uploadToCloudinary } from "@/lib/cloudinary-client";
+import { uploadDirectToCloudinary } from "@/lib/cloudinary-direct";
 import { createCertificate, updateCertificate } from "@/actions/certificate";
 import { Loader2 } from "lucide-react";
 import { Certificate } from "@prisma/client";
@@ -29,6 +29,7 @@ interface CertificateFormProps {
 export function CertificateForm({ initialData, onSuccess }: CertificateFormProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
  
   const {
@@ -55,20 +56,18 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
     if (!file) return;
   
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const result = await uploadToCloudinary(file, "image");
-      if (result && result.url) {
-        setValue("imageUrl", result.url);
-        setUploadedImage(result.url);
-        alert("Image uploaded successfully!");
-      } else {
-        throw new Error("Upload returned no URL");
-      }
+      const result = await uploadDirectToCloudinary(file, "image", (progress) => {
+        setUploadProgress(progress.percent);
+      });
+      setValue("imageUrl", result.url);
+      setUploadedImage(result.url);
     } catch (error) {
-      console.error("Upload failed", error);
       alert("Upload failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
  
@@ -87,8 +86,7 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
       }
       onSuccess();
     } catch (error) {
-      console.error("Save failed", error);
-      alert("Save failed");
+      alert("Save failed: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setLoading(false);
     }
@@ -116,28 +114,30 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
       <div>
         <label className="block text-sm font-medium">Image Upload</label>
         <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
-        {uploading && <div className="mt-2 flex items-center text-sm"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</div>}
-        
-        {/* Show newly uploaded image */}
+        {uploading && (
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-2">
+              <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+            </div>
+          </div>
+        )}
         {uploadedImage && (
           <div className="mt-3">
-            <p className="text-sm text-green-600">✓ New image uploaded</p>
+            <p className="text-sm text-green-600">✓ Image uploaded</p>
             <img src={uploadedImage} alt="New upload" className="mt-2 h-32 rounded-lg object-cover border" />
           </div>
         )}
-        
-        {/* Show current image when editing (only if no new upload) */}
         {!uploadedImage && currentImageUrl && (
           <div className="mt-3">
             <p className="text-sm text-muted-foreground">Current image:</p>
             <img src={currentImageUrl} alt="Current" className="mt-2 h-32 rounded-lg object-cover border" />
           </div>
         )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Image URL</label>
-        <Input {...register("imageUrl")} placeholder="https://..." />
+        {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
       </div>
  
       <div>
