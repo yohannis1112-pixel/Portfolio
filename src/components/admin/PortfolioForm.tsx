@@ -70,6 +70,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     setUploadProgress(0);
     try {
       const resourceType = file.type.startsWith("video/") ? "video" : "image";
+      const isLarge = file.size > 100 * 1024 * 1024;
       const result = await uploadDirectToCloudinary(file, resourceType, (progress) => {
         setUploadProgress(progress.percent);
       });
@@ -166,7 +167,10 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
         {uploading && (
           <div className="mt-2 space-y-1">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Uploading directly to Cloudinary...</span>
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {uploadProgress < 100 ? "Uploading directly to Cloudinary..." : "Processing..."}
+              </span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
@@ -175,6 +179,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
+            <p className="text-xs text-muted-foreground">Large files use chunked upload — do not close this page.</p>
           </div>
         )}
         {uploadedFile && (
