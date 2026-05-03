@@ -1,21 +1,23 @@
 FROM node:18-slim AS base
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-# Install ALL dependencies (including dev for prisma CLI)
+# Install dependencies
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --legacy-peer-deps
+COPY prisma ./prisma
+# Skip postinstall (prisma generate) here - will run in builder with full source
+RUN npm ci --legacy-peer-deps --ignore-scripts
 
 # Build stage
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Generate Prisma Client and build
+# Generate Prisma Client now that schema.prisma is available
 RUN npx prisma generate
-RUN npm run build
+# Build Next.js (skip prisma generate in build script since we just ran it)
+RUN npx next build
 
 # Production runner
 FROM base AS runner
