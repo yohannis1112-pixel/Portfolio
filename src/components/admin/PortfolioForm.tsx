@@ -35,6 +35,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedFile, setUploadedFile] = useState<{ url: string; type: string } | null>(null);
+  const [useUrl, setUseUrl] = useState(false);
 
   const {
     register,
@@ -66,11 +67,18 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check file size before uploading
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      alert(`File is too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Cloudinary free tier limit is 100MB.\n\nPlease either:\n1. Compress the video using HandBrake (free)\n2. Use the "Paste URL" option with a Google Drive or YouTube link`);
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     setUploadProgress(0);
     try {
       const resourceType = file.type.startsWith("video/") ? "video" : "image";
-      const isLarge = file.size > 100 * 1024 * 1024;
       const result = await uploadDirectToCloudinary(file, resourceType, (progress) => {
         setUploadProgress(progress.percent);
       });
@@ -156,52 +164,99 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
         </div>
       </div>
   
+      {/* Media Upload Section */}
       <div>
-        <label className="block text-sm font-medium">Media Upload</label>
-        <Input 
-          type="file" 
-          accept={mediaType === "video" ? "video/*" : "image/*"}
-          onChange={handleFileUpload} 
-          disabled={uploading} 
-        />
-        {uploading && (
-          <div className="mt-2 space-y-1">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {uploadProgress < 100 ? "Uploading directly to Cloudinary..." : "Processing..."}
-              </span>
-              <span>{uploadProgress}%</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">Large files use chunked upload — do not close this page.</p>
+        <label className="block text-sm font-medium mb-2">Media</label>
+
+        {/* Toggle */}
+        <div className="flex gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setUseUrl(false)}
+            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+              !useUrl ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-accent"
+            }`}
+          >
+            Upload File
+          </button>
+          <button
+            type="button"
+            onClick={() => setUseUrl(true)}
+            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+              useUrl ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-accent"
+            }`}
+          >
+            Paste URL (for large videos)
+          </button>
+        </div>
+
+        {useUrl ? (
+          <div className="space-y-1">
+            <Input
+              placeholder="Paste direct video/image URL here..."
+              defaultValue={initialData?.mediaUrl || ""}
+              onChange={(e) => {
+                setValue("mediaUrl", e.target.value);
+                if (e.target.value) {
+                  setUploadedFile({ url: e.target.value, type: mediaType });
+                }
+              }}
+            />
+            <p className="text-xs text-muted-foreground">
+              For videos over 100MB: Upload to Google Drive → Share → Copy link, or use a direct Cloudinary URL.
+            </p>
           </div>
-        )}
-        {uploadedFile && (
-          <div className="mt-3">
-            <p className="text-sm text-green-600">✓ File uploaded successfully</p>
-            {uploadedFile.type === "image" ? (
-              <img src={uploadedFile.url} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border" />
-            ) : (
-              <video src={uploadedFile.url} controls className="mt-2 h-32 rounded-lg border" />
+        ) : (
+          <>
+            <Input
+              type="file"
+              accept={mediaType === "video" ? "video/*" : "image/*"}
+              onChange={handleFileUpload}
+              disabled={uploading}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Max 100MB. For larger files use "Paste URL" option.
+            </p>
+            {uploading && (
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {uploadProgress < 100 ? "Uploading to Cloudinary..." : "Processing..."}
+                  </span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Do not close this page.</p>
+              </div>
             )}
-          </div>
+            {uploadedFile && !useUrl && (
+              <div className="mt-3">
+                <p className="text-sm text-green-600">✓ File uploaded successfully</p>
+                {uploadedFile.type === "image" ? (
+                  <img src={uploadedFile.url} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border" />
+                ) : (
+                  <video src={uploadedFile.url} controls className="mt-2 h-32 rounded-lg border" />
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
       
       {mediaType === "video" && (
         <div>
           <label className="block text-sm font-medium">Thumbnail Upload (optional)</label>
-          <Input 
-            type="file" 
+          <Input
+            type="file"
             accept="image/*"
-            onChange={handleThumbnailUpload} 
-            disabled={uploading} 
+            onChange={handleThumbnailUpload}
+            disabled={uploading}
           />
         </div>
       )}
