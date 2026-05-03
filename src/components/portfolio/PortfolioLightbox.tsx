@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { getMediaUrl, isGoogleDriveUrl } from "./PortfolioCard";
  
 interface PortfolioLightboxProps {
   item: PortfolioItem;
@@ -24,6 +25,41 @@ export function PortfolioLightbox({ item, onClose }: PortfolioLightboxProps) {
  
   if (!mounted) return null;
 
+  const isDrive = isGoogleDriveUrl(item.mediaUrl);
+  const embedUrl = isDrive ? getMediaUrl(item.mediaUrl, "embed") : item.mediaUrl;
+
+  const renderMedia = () => {
+    if (item.mediaType === "video") {
+      if (isDrive) {
+        // Google Drive videos must use iframe embed
+        return (
+          <iframe
+            src={embedUrl}
+            className="mx-auto w-full max-w-5xl rounded-lg shadow-2xl"
+            style={{ height: "70vh" }}
+            allow="autoplay"
+            allowFullScreen
+          />
+        );
+      }
+      return (
+        <video
+          src={item.mediaUrl}
+          controls
+          autoPlay
+          className="mx-auto max-h-[80vh] rounded-lg shadow-2xl"
+        />
+      );
+    }
+    return (
+      <img
+        src={item.mediaUrl}
+        alt={item.title}
+        className="mx-auto max-h-[80vh] rounded-lg shadow-2xl object-contain"
+      />
+    );
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 md:p-10 pointer-events-auto">
       <Button
@@ -36,21 +72,8 @@ export function PortfolioLightbox({ item, onClose }: PortfolioLightboxProps) {
       </Button>
  
       <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-        <div className="relative max-h-[80vh] w-full max-w-5xl">
-          {item.mediaType === "video" ? (
-            <video
-              src={item.mediaUrl}
-              controls
-              autoPlay
-              className="mx-auto max-h-[80vh] rounded-lg shadow-2xl"
-            />
-          ) : (
-            <img
-              src={item.mediaUrl}
-              alt={item.title}
-              className="mx-auto max-h-[80vh] rounded-lg shadow-2xl object-contain"
-            />
-          )}
+        <div className="relative w-full max-w-5xl">
+          {renderMedia()}
         </div>
         
         <div className="text-center text-white max-w-2xl">
