@@ -6,7 +6,6 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
-# Skip postinstall (prisma generate) here - will run in builder with full source
 RUN npm ci --legacy-peer-deps --ignore-scripts
 
 # Build stage
@@ -14,9 +13,16 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Generate Prisma Client now that schema.prisma is available
+
+# Accept NEXT_PUBLIC vars as build arguments so they get baked into the bundle
+ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dqsnrjyfk
+ARG NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=portfolio_uploads
+
+# Set them as env vars during build
+ENV NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=$NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+ENV NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=$NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
 RUN npx prisma generate
-# Build Next.js (skip prisma generate in build script since we just ran it)
 RUN npx next build
 
 # Production runner
