@@ -34,6 +34,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ url: string; type: string } | null>(null);
   const [useUrl, setUseUrl] = useState(false);
 
@@ -67,19 +68,22 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size before uploading
-    const maxSize = 100 * 1024 * 1024; // 100MB
+    const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
       alert(`File is too large (${(file.size / 1024 / 1024).toFixed(0)}MB). Cloudinary free tier limit is 100MB.\n\nPlease either:\n1. Compress the video using HandBrake (free)\n2. Use the "Paste URL" option with a Google Drive or YouTube link`);
       e.target.value = "";
       return;
     }
 
+    const resourceType = file.type.startsWith("video/") ? "video" : "image";
+    const isLargeImage = resourceType === "image" && file.size > 10 * 1024 * 1024;
+
     setUploading(true);
     setUploadProgress(0);
+    setUploadStatus(isLargeImage ? "Compressing image..." : "Uploading...");
     try {
-      const resourceType = file.type.startsWith("video/") ? "video" : "image";
       const result = await uploadDirectToCloudinary(file, resourceType, (progress) => {
+        setUploadStatus("Uploading...");
         setUploadProgress(progress.percent);
       });
       setValue("mediaUrl", result.url);
@@ -90,6 +94,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
     } finally {
       setUploading(false);
       setUploadProgress(0);
+      setUploadStatus("");
     }
   };
 
@@ -222,7 +227,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {uploadProgress < 100 ? "Uploading to Cloudinary..." : "Processing..."}
+                    {uploadStatus || (uploadProgress < 100 ? "Uploading to Cloudinary..." : "Processing...")}
                   </span>
                   <span>{uploadProgress}%</span>
                 </div>
