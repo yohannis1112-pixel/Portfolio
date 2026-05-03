@@ -3,39 +3,75 @@
 import Image from "next/image";
 import { PortfolioItem } from "@prisma/client";
 import { Play } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-// Converts Google Drive share URL to embeddable preview URL
-export function getMediaUrl(url: string, type: "preview" | "embed" = "preview"): string {
-  if (!url) return url;
+// ─── URL Detection ────────────────────────────────────────────────────────────
 
-  // Match Google Drive file ID
-  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (driveMatch) {
-    const fileId = driveMatch[1];
-    if (type === "embed") {
-      return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    // Thumbnail preview
-    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+export function getVideoType(url: string): "youtube" | "drive" | "direct" | null {
+  if (!url) return null;
+  if (url.includes("youtube.com") || url.includes("youtu.be")) return "youtube";
+  if (url.includes("drive.google.com")) return "drive";
+  if (url.match(/\.(mp4|webm|ogg|mov)(\?|$)/i)) return "direct";
+  return null;
+}
+
+export function getYouTubeId(url: string): string | null {
+  const patterns = [
+    /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
   }
+  return null;
+}
 
+export function getDriveId(url: string): string | null {
+  const match = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+export function getEmbedUrl(url: string): string {
+  const ytId = getYouTubeId(url);
+  if (ytId) {
+    return `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&vq=hd1080`;
+  }
+  const driveId = getDriveId(url);
+  if (driveId) {
+    return `https://drive.google.com/file/d/${driveId}/preview`;
+  }
   return url;
 }
 
-export function isGoogleDriveUrl(url: string): boolean {
-  return url?.includes("drive.google.com");
+export function getThumbnailUrl(url: string): string | null {
+  const ytId = getYouTubeId(url);
+  if (ytId) {
+    // maxresdefault = highest quality YouTube thumbnail
+    return `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+  }
+  const driveId = getDriveId(url);
+  if (driveId) {
+    // sz=w800 gives higher quality Drive thumbnail
+    return `https://drive.google.com/thumbnail?id=${driveId}&sz=w800`;
+  }
+  return null;
 }
- 
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 interface PortfolioCardProps {
   item: PortfolioItem;
   onClick: (item: PortfolioItem) => void;
   priority?: boolean;
 }
- 
+
 export function PortfolioCard({ item, onClick, priority = false }: PortfolioCardProps) {
-  const thumbnailSrc = item.thumbnailUrl || getMediaUrl(item.mediaUrl, "preview");
-  const isDrive = isGoogleDriveUrl(item.mediaUrl);
+  const videoType = getVideoType(item.mediaUrl);
+  const autoThumb = getThumbnailUrl(item.mediaUrl);
+  const thumbnailSrc = item.thumbnailUrl || autoThumb || item.mediaUrl;
+  const isExternalThumb = !item.thumbnailUrl && (videoType === "youtube" || videoType === "drive");
 
   return (
     <div
@@ -43,8 +79,7 @@ export function PortfolioCard({ item, onClick, priority = false }: PortfolioCard
       onClick={() => onClick(item)}
     >
       <div className="aspect-square relative">
-        {isDrive && !item.thumbnailUrl ? (
-          // Google Drive thumbnail via img tag (Next/Image doesn't support drive.google.com)
+        {isExternalThumb ? (
           <img
             src={thumbnailSrc}
             alt={item.title}
