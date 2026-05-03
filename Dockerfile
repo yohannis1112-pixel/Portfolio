@@ -1,86 +1,46 @@
-# Use the official Node.js 18 image (Debian-based)
 FROM node:18-slim AS base
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies only when needed
+# Install ALL dependencies (including dev for prisma CLI)
 FROM base AS deps
-RUN apt-get update && apt-get install -y libc6 openssl
-# Install OpenSSL 1.1 for Prisma compatibility
-RUN apt-get install -y wget && \
-    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-# Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
-# Rebuild the source code only when needed
+# Build stage
 FROM base AS builder
 WORKDIR /app
-
-# Install OpenSSL 1.1 for Prisma compatibility
-RUN apt-get update && apt-get install -y wget && \
-    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    rm -rf /var/lib/apt/lists/*
-
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Install dev dependencies for building
-RUN npm ci --legacy-peer-deps
-
-# Generate Prisma Client
+# Generate Prisma Client and build
 RUN npx prisma generate
-
-# Build the application
 RUN npm run build
 
-# Production image, copy all the files and run next
+# Production runner
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install OpenSSL 1.1 for Prisma
-RUN apt-get update && \
-    apt-get install -y wget && \
-    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy the public folder
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN mkdir .next && chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy Prisma files
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 USER nextjs
 
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
 CMD ["node", "server.js"]
