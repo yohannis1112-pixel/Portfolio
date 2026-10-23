@@ -7,9 +7,10 @@ import cloudinary from "@/lib/cloudinary";
 export async function getPortfolioItems() {
   try {
     return await prisma.portfolioItem.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        { featured: "desc" },
+        { createdAt: "desc" },
+      ],
     });
   } catch (error) {
     console.error("Failed to fetch portfolio items:", error);

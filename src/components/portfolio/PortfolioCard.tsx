@@ -95,6 +95,7 @@ export function PortfolioCard({ item, onClick, priority = false }: PortfolioCard
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         )}
+
         <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex items-center justify-center">
           {item.mediaType === "video" && (
             <div className="rounded-full bg-white/20 p-4 backdrop-blur-sm">
