@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 
 export async function getPortfolioHero() {
   try {
-    // @ts-ignore - Prisma client needs to be regenerated
     const hero = await prisma.portfolioHero.findFirst();
     if (!hero) {
       // Return default content if nothing in DB yet
@@ -28,17 +27,14 @@ export async function updatePortfolioHero(data: {
   description: string;
 }) {
   try {
-    // @ts-ignore - Prisma client needs to be regenerated
     const existingHero = await prisma.portfolioHero.findFirst();
 
     if (existingHero) {
-      // @ts-ignore - Prisma client needs to be regenerated
       await prisma.portfolioHero.update({
         where: { id: existingHero.id },
         data,
       });
     } else {
-      // @ts-ignore - Prisma client needs to be regenerated
       await prisma.portfolioHero.create({
         data,
       });

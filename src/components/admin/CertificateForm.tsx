@@ -95,24 +95,24 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium">Title</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Title</label>
         <Input {...register("title")} placeholder="Certificate title" />
-        {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+        {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
       </div>
- 
+
       <div>
-        <label className="block text-sm font-medium">Issuer</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Issuer</label>
         <Input {...register("issuer")} placeholder="e.g. Adobe, Coursera" />
-        {errors.issuer && <p className="text-sm text-red-500">{errors.issuer.message}</p>}
+        {errors.issuer && <p className="text-sm text-destructive mt-1">{errors.issuer.message}</p>}
       </div>
- 
+
       <div>
-        <label className="block text-sm font-medium">Issue Date</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Issue Date</label>
         <Input type="date" {...register("issueDate")} />
       </div>
  
       <div>
-        <label className="block text-sm font-medium">Image Upload</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Image Upload</label>
         <Input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
         {uploading && (
           <div className="mt-2 space-y-1">
@@ -127,25 +127,25 @@ export function CertificateForm({ initialData, onSuccess }: CertificateFormProps
         )}
         {uploadedImage && (
           <div className="mt-3">
-            <p className="text-sm text-green-600">✓ Image uploaded</p>
-            <img src={uploadedImage} alt="New upload" className="mt-2 h-32 rounded-lg object-cover border" />
+            <p className="text-sm text-green-600 dark:text-green-400 font-medium">✓ Image uploaded</p>
+            <img src={uploadedImage} alt="New upload" className="mt-2 h-32 rounded-lg object-cover border border-border" />
           </div>
         )}
         {!uploadedImage && currentImageUrl && (
           <div className="mt-3">
             <p className="text-sm text-muted-foreground">Current image:</p>
-            <img src={currentImageUrl} alt="Current" className="mt-2 h-32 rounded-lg object-cover border" />
+            <img src={currentImageUrl} alt="Current" className="mt-2 h-32 rounded-lg object-cover border border-border" />
           </div>
         )}
-        {errors.imageUrl && <p className="text-sm text-red-500">{errors.imageUrl.message}</p>}
+        {errors.imageUrl && <p className="text-sm text-destructive mt-1">{errors.imageUrl.message}</p>}
       </div>
- 
+
       <div>
-        <label className="block text-sm font-medium">Certificate Link (URL)</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Certificate Link (URL)</label>
         <Input {...register("credentialUrl")} placeholder="https://..." />
       </div>
- 
-      <Button type="submit" className="w-full" disabled={loading || uploading}>
+
+      <Button type="submit" className="w-full mt-4" disabled={loading || uploading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {initialData ? "Update Certificate" : "Create Certificate"}
       </Button>

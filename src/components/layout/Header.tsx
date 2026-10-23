@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getSiteSettings } from "@/actions/settings";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
  
 const navigation = [
   { name: "Portfolio", href: "/" },
@@ -63,19 +64,23 @@ export function Header() {
             <Button variant="outline" size="sm">Admin</Button>
           </Link>
         </div>*/}
-        <div className="hidden md:block">
+        <div className="hidden md:flex md:items-center md:gap-4">
+          <ThemeToggle />
+          <div>
             {headerIcon ? (
               <img src={headerIcon} alt="Admin" className="h-10 w-auto object-contain max-w-[150px]" />
             ) : (
               <User className="h-8 w-12 text-muted-foreground" />
             )}
+          </div>
         </div>
- 
-        {/* Mobile menu button */ }
-        <div className="flex md:hidden">
+
+        {/* Mobile menu button */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
           <button
             type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-muted-foreground"
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-muted-foreground hover:text-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <span className="sr-only">Open main menu</span>

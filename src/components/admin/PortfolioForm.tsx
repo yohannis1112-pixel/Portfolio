@@ -134,52 +134,54 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
   };
  
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium">Title</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Title</label>
         <Input {...register("title")} placeholder="Item title" />
-        {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+        {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
       </div>
   
       <div>
-        <label className="block text-sm font-medium">Description</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Description</label>
         <Textarea {...register("description")} placeholder="Description (optional)" />
       </div>
   
       <div>
-        <label className="block text-sm font-medium">Category</label>
+        <label className="block text-sm font-medium text-foreground mb-1">Category</label>
         <Input {...register("category")} placeholder="e.g. Photo, Video, 3D" />
-        {errors.category && <p className="text-sm text-red-500">{errors.category.message}</p>}
+        {errors.category && <p className="text-sm text-destructive mt-1">{errors.category.message}</p>}
       </div>
   
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium">Media Type</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Media Type</label>
           <select
             {...register("mediaType")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-10 w-full rounded-md border border-input bg-background text-foreground px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <option value="image">Image</option>
-            <option value="video">Video</option>
+            <option value="image" className="bg-popover text-popover-foreground">Image</option>
+            <option value="video" className="bg-popover text-popover-foreground">Video</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium">Order</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Order</label>
           <Input type="number" {...register("order", { valueAsNumber: true })} />
         </div>
       </div>
   
       {/* Media Upload Section */}
       <div>
-        <label className="block text-sm font-medium mb-2">Media</label>
+        <label className="block text-sm font-medium text-foreground mb-2">Media</label>
 
         {/* Toggle */}
         <div className="flex gap-2 mb-3">
           <button
             type="button"
             onClick={() => setUseUrl(false)}
-            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-              !useUrl ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-accent"
+            className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
+              !useUrl 
+                ? "bg-primary text-primary-foreground border-primary" 
+                : "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
             Upload File
@@ -187,8 +189,10 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
           <button
             type="button"
             onClick={() => setUseUrl(true)}
-            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-              useUrl ? "bg-primary text-primary-foreground border-primary" : "border-input hover:bg-accent"
+            className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
+              useUrl 
+                ? "bg-primary text-primary-foreground border-primary" 
+                : "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
             Paste URL (for large videos)
@@ -242,11 +246,11 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
             )}
             {uploadedFile && !useUrl && (
               <div className="mt-3">
-                <p className="text-sm text-green-600">✓ File uploaded successfully</p>
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">✓ File uploaded successfully</p>
                 {uploadedFile.type === "image" ? (
-                  <img src={uploadedFile.url} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border" />
+                  <img src={uploadedFile.url} alt="Preview" className="mt-2 h-32 rounded-lg object-cover border border-border" />
                 ) : (
-                  <video src={uploadedFile.url} controls className="mt-2 h-32 rounded-lg border" />
+                  <video src={uploadedFile.url} controls className="mt-2 h-32 rounded-lg border border-border" />
                 )}
               </div>
             )}
@@ -256,7 +260,7 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
       
       {mediaType === "video" && (
         <div>
-          <label className="block text-sm font-medium">Thumbnail Upload (optional)</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Thumbnail Upload (optional)</label>
           <Input
             type="file"
             accept="image/*"
@@ -266,12 +270,19 @@ export function PortfolioForm({ initialData, onSuccess }: PortfolioFormProps) {
         </div>
       )}
   
-      <div className="flex items-center gap-2">
-        <input type="checkbox" {...register("featured")} id="featured" />
-        <label htmlFor="featured" className="text-sm font-medium">Featured Item</label>
+      <div className="flex items-center gap-2 pt-1">
+        <input 
+          type="checkbox" 
+          {...register("featured")} 
+          id="featured" 
+          className="h-4 w-4 rounded border-input bg-background text-primary focus:ring-ring cursor-pointer" 
+        />
+        <label htmlFor="featured" className="text-sm font-medium text-foreground cursor-pointer">
+          Featured Item
+        </label>
       </div>
   
-      <Button type="submit" className="w-full" disabled={loading || uploading}>
+      <Button type="submit" className="w-full mt-4" disabled={loading || uploading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {initialData ? "Update Item" : "Create Item"}
       </Button>

@@ -59,7 +59,7 @@ export function HeaderSettingsForm({ initialIcon }: HeaderSettingsFormProps) {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col gap-4">
-          <label className="text-sm font-medium">Header Navigation Icon</label>
+          <label className="text-sm font-medium text-foreground">Header Navigation Icon</label>
           <div className="flex items-center gap-6">
             <div className="flex h-20 min-w-20 items-center justify-center rounded border bg-muted p-2">
               {iconUrl ? (

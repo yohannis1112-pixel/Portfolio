@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, ImageIcon, Award, FileText, LogOut, Home, User, Settings } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -53,10 +54,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-accent/5">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r bg-background hidden md:block">
-        <div className="flex h-16 items-center px-6 border-b">
+        <div className="flex h-16 items-center justify-between px-6 border-b">
           <Link href="/" className="text-xl font-bold tracking-tighter">
             ADMIN<span className="text-primary">PANEL</span>
           </Link>
+          <ThemeToggle />
         </div>
         <nav className="p-4 space-y-1">
           {sidebarLinks.map((link) => {
@@ -77,7 +79,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             );
           })}
-          <div className="pt-4 mt-4 border-t">
+          <div className="pt-4 mt-4 border-t space-y-1">
             <Link
               href="/"
               className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -87,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-red-500 hover:bg-red-50"
+              className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-destructive hover:bg-destructive/10 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -98,11 +100,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <div className="md:pl-64 flex flex-col flex-1">
-        <header className="h-16 border-b bg-background flex items-center justify-between px-8 md:hidden">
+        <header className="h-16 border-b bg-background flex items-center justify-between px-6 md:hidden">
           <Link href="/" className="font-bold">ADMIN PANEL</Link>
-          <Button variant="ghost" size="icon" onClick={() => signOut({ callbackUrl: "/" })}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="ghost" size="icon" onClick={() => signOut({ callbackUrl: "/" })}>
+              <LogOut className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
         </header>
         <main className="p-8">
           {children}

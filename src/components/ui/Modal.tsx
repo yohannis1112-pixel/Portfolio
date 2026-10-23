@@ -24,15 +24,15 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null;
  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-lg border bg-white p-6 shadow-lg">
-        <div className="mb-4 flex items-center justify-between">
-          {title && <h2 className="text-xl font-bold">{title}</h2>}
-          <Button variant="ghost" size="icon" onClick={onClose} className="ml-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg rounded-xl border border-border bg-card text-card-foreground p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between border-b pb-3">
+          {title && <h2 className="text-xl font-bold text-foreground">{title}</h2>}
+          <Button variant="ghost" size="icon" onClick={onClose} className="ml-auto text-muted-foreground hover:text-foreground">
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="max-h-[80vh] overflow-y-auto">
+        <div className="max-h-[80vh] overflow-y-auto pr-1">
           {children}
         </div>
       </div>

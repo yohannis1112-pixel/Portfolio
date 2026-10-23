@@ -65,25 +65,25 @@ export function PortfolioHeroForm({ initialData }: PortfolioHeroFormProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Title Prefix</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Title Prefix</label>
               <Input {...register("title")} placeholder="e.g., Creative" />
-              {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>}
+              {errors.title && <p className="text-sm text-destructive mt-1">{errors.title.message}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Highlight Word</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Highlight Word</label>
               <Input {...register("highlight")} placeholder="e.g., Professional" />
-              {errors.highlight && <p className="text-sm text-red-500 mt-1">{errors.highlight.message}</p>}
+              {errors.highlight && <p className="text-sm text-destructive mt-1">{errors.highlight.message}</p>}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Description</label>
             <Textarea 
               {...register("description")} 
               placeholder="Enter a brief description of your work..."
               rows={4}
             />
-            {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>}
+            {errors.description && <p className="text-sm text-destructive mt-1">{errors.description.message}</p>}
           </div>
 
           <div className="flex justify-end">
